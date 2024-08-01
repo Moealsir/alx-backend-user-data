@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """ Use of regex in replacing occurrences of certain field values """
 import re
-
 import logging
 from typing import List
 
+
+patterns = {
+    'extract': lambda x, y: r'(?P<field>{})=[^{}]*'.format('|'.join(x), y),
+    'replace': lambda x: r'\g<field>={}'.format(x),
+}
+
+PII_FIELDS = ("name", "email", "phone", "ssn", "password")
 
 class RedactingFormatter(logging.Formatter):
     """ Redacting Formatter class
@@ -23,12 +29,6 @@ class RedactingFormatter(logging.Formatter):
                             super().format(record), self.SEPARATOR)
 
 
-patterns = {
-    'extract': lambda x, y: r'(?P<field>{})=[^{}]*'.format('|'.join(x), y),
-    'replace': lambda x: r'\g<field>={}'.format(x),
-}
-
-
 def filter_datum(
         fields: List[str], redaction: str, message: str, separator: str,
         ) -> str:
@@ -36,3 +36,14 @@ def filter_datum(
     """
     extract, replace = (patterns["extract"], patterns["replace"])
     return re.sub(extract(fields, separator), replace(redaction), message)
+
+def get_logger():
+    """ Create a new logger for user data """
+    logger = logging.getLogger("user_data")
+    handler = logging.StreamHandler()
+    handler.setFormatter(RedactingFormatter(PII_FIELDS))
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    logger.addHandler(handler)
+    return logger
+
