@@ -12,6 +12,7 @@ patterns = {
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
 
+
 class RedactingFormatter(logging.Formatter):
     """ Redacting Formatter class
         """
@@ -37,6 +38,7 @@ def filter_datum(
     extract, replace = (patterns["extract"], patterns["replace"])
     return re.sub(extract(fields, separator), replace(redaction), message)
 
+
 def get_logger():
     """ Create a new logger for user data """
     logger = logging.getLogger("user_data")
@@ -46,4 +48,3 @@ def get_logger():
     logger.propagate = False
     logger.addHandler(handler)
     return logger
-
