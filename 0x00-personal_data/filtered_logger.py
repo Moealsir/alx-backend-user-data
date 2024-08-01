@@ -3,13 +3,16 @@
 import re
 
 
-def filter_datum(fields: list[str],
-                 redaction: str,
-                 message: str,
-                 separator: str) -> str:
-    """ Return regex log message """
-    for field in fields:
-        message = re.sub(f'{field}=(.*?){separator}',
-                         f'{field}={redaction}{separator}', message)
+patterns = {
+    'extract': lambda x, y: r'(?P<field>{})=[^{}]*'.format('|'.join(x), y),
+    'replace': lambda x: r'\g<field>={}'.format(x),
+}
 
-    return message
+
+def filter_datum(
+        fields: list[str], redaction: str, message: str, separator: str,
+        ) -> str:
+    """Filters a log line.
+    """
+    extract, replace = (patterns["extract"], patterns["replace"])
+    return re.sub(extract(fields, separator), replace(redaction), message)
